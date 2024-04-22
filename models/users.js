@@ -1,0 +1,62 @@
+const mongoose = require('mongoose');
+
+const userSchema = mongoose.Schema(
+    {
+        id: {
+            type: Number,
+            required: true
+        },
+        pass: {
+            type: String,
+            required: true
+        },
+        f_name: {
+            type: String,
+            required: true
+        },
+        l_name: {
+            type: String,
+            required: true
+        },
+        location_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: false
+        },
+        email: {
+            type: String,
+            required: true
+        },
+        phone: {
+            type: String,
+            required: true
+        },
+        dob: {
+            type: Date,
+            required: false
+        },
+        blood_type: {
+            type: String,
+            required: true
+        },
+        role_name: {
+            type: String,
+            required: true,
+            default: 'patient'
+        },
+        image: {
+            type: String,
+            required: false
+        }
+    },
+    {
+        timestamps: true,
+        versionKey: false
+    },
+    {
+        collection: 'users'
+    }
+
+);
+
+const User = mongoose.model('user', userSchema);
+module.exports = User;

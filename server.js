@@ -63,6 +63,27 @@ app.get('/api/users', async (req, res) => {
     res.status(500).json({ message: 'Error fetching users' });
   }
 });
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, pass } = req.body;
+
+    // Find the user with the provided email
+    const user = await User.findOne({ email });
+
+    // Check if user exists and validate password
+    if (!user || user.pass !== pass) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Authentication successful
+    res.status(200).json({ message: 'Login successful', user });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'Login failed' });
+  }
+});
+
+
 
 
 app.post('/api/hospitals', async (req, res) => {
@@ -132,6 +153,27 @@ app.get('/api/doctors', async (req, res) => {
   }
 });
 
+app.post('/api/locations', async (req, res) => {
+  try {
+    const { city, street, address1, address2 } = req.body;
+
+     const location = await Location.create({_id: new mongoose.Types.ObjectId(), city, street, address1, address2 });
+
+    res.status(201).json(location);
+  } catch (error) {
+    console.error('Error creating location:', error);
+    res.status(500).json({ message: 'Error creating location' });
+  }
+});
+app.get('/api/locations', async (req, res) => {
+  try {
+    const locations = await Location.find(); 
+    res.json(locations);
+  } catch (error) {
+    console.error('Error fetching doctors:', error);
+    res.status(500).json({ message: 'Error fetching doctors' });
+  }
+});
 
 
 app.post('/api/categories', async (req, res) => {

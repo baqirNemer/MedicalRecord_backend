@@ -20,7 +20,7 @@ const userSchema = mongoose.Schema(
         },
         location_id: {
             type: mongoose.Schema.Types.ObjectId,
-            required: false
+            required: true
         },
         email: {
             type: String,
@@ -32,7 +32,7 @@ const userSchema = mongoose.Schema(
         },
         dob: {
             type: Date,
-            required: false
+            required: true
         },
         blood_type: {
             type: String,

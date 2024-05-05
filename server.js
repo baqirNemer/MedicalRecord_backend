@@ -14,6 +14,7 @@ const Hospital = require('./models/hospitals');
 const Categories = require('./models/categories');
 const Doctors = require('./models/doctors');
 const Logs = require('./models/logs');
+const Appointment = require('./models/appointments');
 
 const app = express(); //creating the server
 
@@ -82,8 +83,21 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Login failed' });
   }
 });
+app.get('/api/users/:email', async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    const user = await User.findOne({ email: userEmail });
 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user by email:', error);
+    res.status(500).json({ message: 'Error fetching user' });
+  }
+});
 
 
 app.post('/api/hospitals', async (req, res) => {
@@ -112,23 +126,39 @@ app.get('/api/hospitals', async (req, res) => {
     res.status(500).json({ message: 'Error fetching hospitals' });
   }
 });
+app.get('/api/hospitals/:id', async (req, res) => {
+  const hospitalId = req.params.id;
 
+  try {
+    const hospital = await Hospital.findById(hospitalId);
+
+    if (!hospital) {
+      return res.status(404).json({ message: 'Hospital not found' });
+    }
+
+    res.json(hospital);
+  } catch (error) {
+    console.error('Error fetching hospital by ObjectId:', error);
+    res.status(500).json({ message: 'Error fetching hospital' });
+  }
+});
 
 app.post('/api/doctors', async (req, res) => {
   try {
-    const { user_id, hospital_id } = req.body;
+    const { doctor_email, hospital_id } = req.body;
     
-    const userExists = await User.exists({ _id: user_id });
+    // Check if the user (doctor) exists based on the provided ObjectId
+    const userExists = await User.exists({ _id: doctor_email });
     const hospitalExists = await Hospital.exists({ _id: hospital_id });
 
     if (!userExists) {
-        return res.status(400).json({ message: 'User does not exist' });
+        return res.status(400).json({ message: 'User (doctor) does not exist' });
     }
     if (!hospitalExists) {
       return res.status(400).json({ message: 'Hospital does not exist' });
     } 
 
-    const user = await User.findById(user_id);
+    const user = await User.findById(doctor_email);
     const userRole = user.role_name;
 
     if (userRole !== 'doctor') {
@@ -136,7 +166,7 @@ app.post('/api/doctors', async (req, res) => {
     }
 
     // Create the doctor entry
-    const doctor = await Doctors.create({ _id: new mongoose.Types.ObjectId(), user_id, hospital_id });
+    const doctor = await Doctors.create({ doctor_email, hospital_id });
     res.status(201).json(doctor);
   } catch (error) {
     console.error('Error creating doctor:', error);
@@ -145,13 +175,32 @@ app.post('/api/doctors', async (req, res) => {
 });
 app.get('/api/doctors', async (req, res) => {
   try {
-    const doctors = await Doctors.find(); 
+    const { hospital_id } = req.query;
+    const doctors = await Doctors.find({ hospital_id });
     res.json(doctors);
   } catch (error) {
     console.error('Error fetching doctors:', error);
     res.status(500).json({ message: 'Error fetching doctors' });
   }
 });
+app.get('/api/doctors/:id', async (req, res) => {
+  const doctorId = req.params.id;
+
+  try {
+    const doctor = await Doctors.findById(doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.json(doctor);
+  } catch (error) {
+    console.error('Error fetching doctor by ID:', error);
+    res.status(500).json({ message: 'Error fetching doctor' });
+  }
+});
+
+
 
 app.post('/api/locations', async (req, res) => {
   try {
@@ -172,6 +221,22 @@ app.get('/api/locations', async (req, res) => {
   } catch (error) {
     console.error('Error fetching doctors:', error);
     res.status(500).json({ message: 'Error fetching doctors' });
+  }
+});
+app.get('/api/locations/:id', async (req, res) => {
+  const locationId = req.params.id;
+
+  try {
+    const location = await Location.findById(locationId);
+
+    if (!location) {
+      return res.status(404).json({ message: 'Location not found' });
+    }
+
+    res.json(location);
+  } catch (error) {
+    console.error('Error fetching location by ObjectId:', error);
+    res.status(500).json({ message: 'Error fetching location' });
   }
 });
 
@@ -195,15 +260,30 @@ app.get('/api/categories', async (req, res) => {
     res.status(500).json({ message: 'Error fetching categories' });
   }
 });
+app.get('/api/categories/:id', async (req, res) => {
+  const categoryId = req.params.id;
+
+  try {
+    const category = await Categories.findById(categoryId);
+
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    res.json({ cname: category.cname }); // Return category name only
+  } catch (error) {
+    console.error('Error fetching category by ID:', error);
+    res.status(500).json({ message: 'Error fetching category' });
+  }
+});
 
 
 app.post('/api/logs', async (req, res) => {
   try {
-    const { patient_id, doctor_id, hospital_id, category_id, description } = req.body;
+    const { patient_email, doctor_id, category_id, description } = req.body;
 
-    const patientExists = await User.exists({ _id: patient_id, role_name: 'patient' });
+    const patientExists = await User.exists({ email: patient_email, role_name: 'patient' });
     const doctorExists = await Doctors.exists({ _id: doctor_id });
-    const hospitalExists = await Hospital.exists({ _id: hospital_id });
     const categoryExists = await Categories.exists({ _id: category_id });
 
     if (!patientExists ) {
@@ -212,14 +292,11 @@ app.post('/api/logs', async (req, res) => {
     if (!doctorExists) {
       return res.status(400).json({ message: 'Doctor does not exist' });
     }
-    if (!hospitalExists) {
-      return res.status(400).json({ message: 'Hospital does not exist' });
-    }
     if (!categoryExists) {
       return res.status(400).json({ message: 'Category does not exist' });
     }
 
-    const log = await Logs.create({ _id: new mongoose.Types.ObjectId(), patient_id, doctor_id, hospital_id, category_id, description });
+    const log = await Logs.create({ _id: new mongoose.Types.ObjectId(), patient_email, doctor_id, category_id, description });
     res.status(201).json(log);
   } catch (error) {
     console.error('Error creating log:', error);
@@ -233,5 +310,67 @@ app.get('/api/logs', async (req, res) => {
   } catch (error) {
     console.error('Error fetching logs:', error);
     res.status(500).json({ message: 'Error fetching logs' });
+  }
+});
+app.get('/api/logs/:email', async (req, res) => {
+  try {
+    const patient_email = req.params.email; // Access email from URL params
+
+    if (!patient_email) {
+      return res.status(400).json({ message: 'Patient email is required' });
+    }
+
+    const logs = await Logs.find({ patient_email });
+    res.json(logs);
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    res.status(500).json({ message: 'Error fetching logs', error: error.message });
+  }
+});
+
+app.post('/api/appointments', async (req, res) => {
+  try {
+      const { patient_email, doctor_id, description, date } = req.body;
+
+      // Check if patient exists and is a patient
+      const patientExists = await User.exists({ email: patient_email, role_name: 'patient' });
+      if (!patientExists) {
+          return res.status(400).json({ message: 'Patient does not exist or is not a patient' });
+      }
+
+      // Check if doctor exists
+      const doctorExists = await Doctors.exists({ _id: doctor_id });
+      if (!doctorExists) {
+          return res.status(400).json({ message: 'Doctor does not exist' });
+      }
+
+      // Create the appointment
+      const appointment = await Appointment.create({_id: new mongoose.Types.ObjectId(), patient_email, doctor_id, description, date: new Date(date) });
+
+      res.status(201).json(appointment);
+  } catch (error) {
+      console.error('Error creating appointment:', error);
+      res.status(500).json({ message: 'Error creating appointment',error: error.message});
+  }
+});
+app.get('/api/appointments', async (req, res) => {
+  try {
+      const appointments = await Appointment.find();
+      res.json(appointments);
+  } catch (error) {
+      console.error('Error fetching appointments:', error);
+      res.status(500).json({ message: 'Error fetching appointments' });
+  }
+});
+app.get('/api/appointments/:email', async (req, res) => {
+  const { email } = req.params;
+
+  try {
+      // Find all appointments for the specified user
+      const appointments = await Appointment.find({ patient_email: email });
+      res.json(appointments);
+  } catch (error) {
+      console.error(`Error fetching appointments for ${email}:`, error);
+      res.status(500).json({ message: `Error fetching appointments for ${email}` });
   }
 });

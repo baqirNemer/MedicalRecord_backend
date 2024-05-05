@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-
-const logSchema = mongoose.Schema(
+const appointmentSchema = mongoose.Schema(
     {
         _id: mongoose.Schema.Types.ObjectId,
         patient_email: {
@@ -12,23 +11,22 @@ const logSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             required: true
         },
-        category_id: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true
-        },
         description: {
             type: String,
             required: true
         },
+        date: {
+            type: Date,
+            required: true
+        }
     },
     {
         timestamps: true,
-        versionKey: false
-    },
-    {
+        versionKey: false,
+        collection: 'appointments'
     }
 );
 
-const Log = mongoose.model('logs', logSchema);
+const Appointment = mongoose.model('appointments', appointmentSchema);
 
-module.exports = Log;
+module.exports = Appointment;

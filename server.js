@@ -83,6 +83,15 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Login failed' });
   }
 });
+app.get('/api/users/emails', async (req, res) => {
+  try {
+    const emails = await User.find().select('email'); // Assuming 'User' is your Mongoose model for users
+    res.json(emails);
+  } catch (error) {
+    console.error('Error fetching user emails:', error);
+    res.status(500).json({ message: 'Error fetching user emails' });
+  }
+});
 app.get('/api/users/:email', async (req, res) => {
   try {
     const userEmail = req.params.email;
@@ -98,7 +107,15 @@ app.get('/api/users/:email', async (req, res) => {
     res.status(500).json({ message: 'Error fetching user' });
   }
 });
-
+app.get('/api/users/emails', async (req, res) => {
+  try {
+    const emails = await User.find().select('email'); // Assuming 'User' is your Mongoose model for users
+    res.json(emails);
+  } catch (error) {
+    console.error('Error fetching user emails:', error);
+    res.status(500).json({ message: 'Error fetching user emails' });
+  }
+});
 
 app.post('/api/hospitals', async (req, res) => {
   try {

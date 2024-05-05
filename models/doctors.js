@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const DoctorsSchema = mongoose.Schema(
     {
-        user_id: {
-            type: mongoose.Schema.Types.ObjectId,
+        doctor_email: {
+            type: String,
             required: true
         },
         hospital_id: {

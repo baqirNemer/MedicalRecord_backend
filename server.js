@@ -39,6 +39,8 @@ console.log("Failed to connect!");
 });
 
 
+const defaultImageUrl = 'https://i.ibb.co/chBcjyv/default-profile-picture-male-icon.png';
+
 app.post('/api/users', async (req, res) => {
   try {
     const { id, pass, f_name, l_name, location_id, email, phone, dob, blood_type, role_name, image } = req.body;
@@ -48,7 +50,8 @@ app.post('/api/users', async (req, res) => {
             return res.status(400).json({ message: 'Location does not exist' });
         }
     }
-    const user = await User.create({ _id: new mongoose.Types.ObjectId(), id, pass, f_name, l_name, location_id, email, phone, dob, blood_type, role_name, image });
+    const imageUrl = image || defaultImageUrl;
+    const user = await User.create({ _id: new mongoose.Types.ObjectId(), id, pass, f_name, l_name, location_id, email, phone, dob, blood_type, role_name, image: imageUrl });
     res.status(201).json(user);
   } catch (error) {
     console.error('Error creating user:', error);
@@ -116,6 +119,26 @@ app.get('/api/users/emails', async (req, res) => {
     res.status(500).json({ message: 'Error fetching user emails' });
   }
 });
+app.put('/api/users/:email', async (req, res) => {
+  try {
+    const userEmail = req.params.email; // Retrieve email from URL params
+    const updatedUserDetails = req.body; // Updated user details sent in the request body
+
+    // Find the user by email and update their details
+    const user = await User.findOneAndUpdate({ email: userEmail }, updatedUserDetails, { new: true });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user); // Respond with the updated user object
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Error updating user' });
+  }
+});
+
+
 
 app.post('/api/hospitals', async (req, res) => {
   try {

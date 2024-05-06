@@ -45,17 +45,15 @@ const userSchema = mongoose.Schema(
         },
         image: {
             type: String,
-            required: false
+            required: false,
+            default: 'https://i.ibb.co/chBcjyv/default-profile-picture-male-icon.png'
         }
     },
     {
         timestamps: true,
-        versionKey: false
-    },
-    {
+        versionKey: false,
         collection: 'users'
-    }
-
+    },
 );
 
 const User = mongoose.model('user', userSchema);

@@ -139,7 +139,7 @@ app.put('/api/users/:email', async (req, res) => {
 });
 
 
-
+const defaultHospitalImageUrl = 'https://i.ibb.co/fpL4Fwz/194879060-hospital-medical-center-clinic-icon-isolated-on-white-background.jpg';
 app.post('/api/hospitals', async (req, res) => {
   try {
     const { location_id, name, phone, image, description } = req.body;
@@ -149,7 +149,8 @@ app.post('/api/hospitals', async (req, res) => {
           return res.status(400).json({ message: 'Location does not exist' });
       }
     }
-    const hospital = await Hospital.create({_id: new mongoose.Types.ObjectId(), location_id, name, phone, image, description });
+    const imageUrl = image || defaultHospitalImageUrl;
+    const hospital = await Hospital.create({_id: new mongoose.Types.ObjectId(), location_id, name, phone, image: imageUrl, description });
     
     res.status(201).json(hospital);
   } catch (error) {
@@ -187,8 +188,8 @@ app.post('/api/doctors', async (req, res) => {
   try {
     const { doctor_email, hospital_id } = req.body;
     
-    // Check if the user (doctor) exists based on the provided ObjectId
-    const userExists = await User.exists({ _id: doctor_email });
+    // Check if the user (doctor) exists based on the provided email
+    const userExists = await User.exists({ email: doctor_email });
     const hospitalExists = await Hospital.exists({ _id: hospital_id });
 
     if (!userExists) {
@@ -198,7 +199,7 @@ app.post('/api/doctors', async (req, res) => {
       return res.status(400).json({ message: 'Hospital does not exist' });
     } 
 
-    const user = await User.findById(doctor_email);
+    const user = await User.findOne({ email: doctor_email });2
     const userRole = user.role_name;
 
     if (userRole !== 'doctor') {
@@ -213,6 +214,7 @@ app.post('/api/doctors', async (req, res) => {
     res.status(500).json({ message: 'Error creating doctor' });
   }
 });
+
 app.get('/api/doctors', async (req, res) => {
   try {
     const { hospital_id } = req.query;
